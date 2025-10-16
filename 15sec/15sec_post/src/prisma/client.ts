@@ -1,12 +1,11 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
-import { prisma } from '15sec_core';
+import { db } from '15sec_core/dist/index';
 
 async function createPost() {
-  await prisma.user.create({
+  await db.user.create({
     data: {
-      email: 'lalilelulo@gmail.com',
-      username: 'lalilelulo',
+      username: 'testUser',
     },
   });
 }
