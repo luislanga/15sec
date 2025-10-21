@@ -1,3 +1,9 @@
+-- CreateEnum
+CREATE TYPE "VideoUploadStatus" AS ENUM ('PENDING', 'COMPLETED');
+
+-- CreateEnum
+CREATE TYPE "ThumbnailStatus" AS ENUM ('PENDING', 'PROCESSING', 'COMPLETED');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -25,8 +31,8 @@ CREATE TABLE "Post" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT,
-    "videoUrl" TEXT NOT NULL,
-    "thumbnail" TEXT,
+    "videoUploadStatus" "VideoUploadStatus" NOT NULL DEFAULT 'PENDING',
+    "thumbnailStatus" "ThumbnailStatus" NOT NULL DEFAULT 'PENDING',
     "authorId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,

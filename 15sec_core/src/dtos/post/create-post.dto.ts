@@ -6,9 +6,5 @@ export class CreatePostDto {
   title: string;
 
   @IsString()
-  @IsNotEmpty()
-  videoUrl: string;
-
-  @IsString()
   authorId: string;
 }

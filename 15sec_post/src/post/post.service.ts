@@ -1,10 +1,11 @@
+import { CreatePostDto } from '15sec_core/dist/dtos/post/create-post.dto';
+import { PostRepository } from '15sec_core/dist/repositories/post.repository';
 import { Post } from '15sec_core/generated/prisma';
 import { Injectable } from '@nestjs/common';
 
 import { S3Service } from '@/s3/s3.service';
 
-import { CreatePostDto } from './dtos/create-post.dto';
-import { PostRepository } from './post.repository';
+
 
 @Injectable()
 export class PostService {
@@ -15,6 +16,8 @@ export class PostService {
   ) {}
 
   async create(createPostDto: CreatePostDto): Promise<Post & { presignedUrl: string }> {
+    // TODO: implement 'user exists' check
+
     const createdPost = await this.postRepository.create(createPostDto);
     
     const presignedUrl = await this.s3Service.getPresignedUploadUrl(createdPost.id);

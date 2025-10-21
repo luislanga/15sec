@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
 
-import { PostStatusUpdateRepository } from './post-status-update.repository';
+import { PostModule } from '@/post/post.module';
+
 import { PostStatusUpdateService } from './post-status-update.service';
 import { SqsService } from './sqs.service';
 
 @Module({
-  providers: [PostStatusUpdateRepository, PostStatusUpdateService, SqsService],
+  imports: [PostModule],
+  providers: [PostStatusUpdateService, SqsService],
   exports: [SqsService],
 })
 export class SqsModule {}

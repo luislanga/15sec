@@ -14,6 +14,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum VideoUploadStatus {
+  PENDING
+  COMPLETED
+}
+
+enum ThumbnailStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+}
+
 model User {
   id        String   @id @default(cuid())
   username  String   @unique
@@ -34,13 +45,13 @@ model Account {
 }
 
 model Post {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  videoUrl    String
-  thumbnail   String?
-  author      User     @relation(fields: [authorId], references: [id])
-  authorId    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                String            @id @default(cuid())
+  title             String
+  description       String?
+  videoUploadStatus VideoUploadStatus @default(PENDING)
+  thumbnailStatus   ThumbnailStatus   @default(PENDING)
+  author            User              @relation(fields: [authorId], references: [id])
+  authorId          String
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 }
