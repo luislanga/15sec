@@ -1,4 +1,4 @@
-import { Message, ReceiveMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
+import { DeleteMessageBatchCommand, Message, ReceiveMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit, Type } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ModuleRef } from '@nestjs/core';
@@ -57,6 +57,55 @@ export class SqsService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /**
+   * Deletes successfully processed messages from the SQS queue in batches.
+   * 
+   * @param queueUrl 
+   * @param messagesToDelete 
+   */
+  async deleteProcessedMessages(
+    queueUrl: string,
+    messagesToDelete: MessageBodyAndReceiptHandle[],
+  ) {
+    const maxChunkSize = 10;
+
+    const chunkSize = Math.min(
+      Number(this.configService.getOrThrow('SQS_DELETE_MESSAGE_BATCH_SIZE')),
+      maxChunkSize,
+    );
+
+    const batches: DeleteMessageBatchCommand[] = [];
+
+    for (let i = 0; i < messagesToDelete.length; i += chunkSize) {
+      const chunk = messagesToDelete.slice(i, i + chunkSize);
+
+      const entries = chunk.map((message, j) => ({
+        Id: (i + j).toString(),
+        ReceiptHandle: message.receiptHandle,
+      }));
+
+      batches.push(
+        new DeleteMessageBatchCommand({
+          QueueUrl: queueUrl,
+          Entries: entries,
+        }),
+      );
+    }
+
+    const results = await Promise.all(
+      batches.map(async batch => this.sqs.send(batch)),
+    );
+
+    let deletedCount = 0;
+
+    for (const res of results) {
+      if (res && res.Successful) {
+        deletedCount += res.Successful.length; 
+      }
+    }
+
+    this.logger.log(`Deleted messages: ${deletedCount}`);
+  }
 
   /**
    * Starts polling an SQS queue and processes messages in batches.
@@ -70,7 +119,7 @@ export class SqsService implements OnModuleInit, OnModuleDestroy {
    * the provided DLQ.
    *
    * @param queueUrl - The full URL of the SQS queue to poll, provided in the .env file.
-   * @param handler - An object implementing `handleMessage(messages: string[]): Promise<string[]>` 
+   * @param handler - An object implementing `handleMessages` 
    *                  where the handler returns an array of ids that failed processing.
    * @param queueName - A human-readable name for the queue, used in logs.
    * @param batchSize - Maximum number of messages to process in a single batch (default = 1).
@@ -81,8 +130,8 @@ export class SqsService implements OnModuleInit, OnModuleDestroy {
     queueUrl: string,
     handler: SqsQueueHandler,
     queueName: string,
-    batchSize = 1,
-    flushTimeoutMs = 0,
+    batchSize,
+    flushTimeoutMs,
   ) {
     this.queueLoops[queueName] = true;
     
@@ -109,12 +158,10 @@ export class SqsService implements OnModuleInit, OnModuleDestroy {
 
       try {
         const hanlderResponse = await handler.handleMessages(currentBatch);
-        
-        return hanlderResponse;
+
+        this.deleteProcessedMessages(queueUrl, hanlderResponse);
       } catch (error) {
         this.logger.error(`[${queueName}] handler error during flush`, error);
-
-        return currentBatch;
       } finally {
         isFlushing = false;
       }
@@ -134,11 +181,9 @@ export class SqsService implements OnModuleInit, OnModuleDestroy {
         Date.now() >= (batchStartTime + flushTimeoutMs)
       ) {
         this.logger.log(`[${queueName}] flushing due to timeout (${flushTimeoutMs}ms elapsed).`);
-        try {
-          await flushBatch(); 
-        } catch (error) {
-          this.logger.error(`[${queueName}] timeout flush failed`, error);
-        }
+
+        await flushBatch(); 
+
         continue;
       }
       if (!isFlushing) {
