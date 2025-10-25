@@ -2,14 +2,10 @@ import { PostRepository } from '15sec_core/dist/repositories/post.repository';
 import { Module } from '@nestjs/common';
 
 import { PrismaService } from '@/prisma/prisma.service';
-import { S3Module } from '@/s3/s3.module';
 
-import { PostController } from './post.controller';
 import { PostService } from './post.service';
 
 @Module({
-  imports: [S3Module],
-  controllers: [PostController],
   providers: [PostService,
     /**
      * PostRepository comes from 15sec_core and is instantiated with a Prisma client.

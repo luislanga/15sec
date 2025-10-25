@@ -1,7 +1,7 @@
+import { CreatePostDto } from '15sec_core/dist/dtos/post/create-post.dto';
 import { Prisma } from '15sec_core/generated/prisma';
 import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 
-import { CreatePostDto } from './dtos/create-post.dto';
 import { PostService } from './post.service';
 
 @Controller('post')
