@@ -46,7 +46,7 @@ export class SqsService implements OnModuleInit, OnModuleDestroy {
    * The following method is called when NestJS initiates, then each item in
    * the QUEUE_CONFIG constant gets it's own listener.
    */
-  async onModuleInit() {
+  async onModuleInit(): Promise<void> {
     for (const queue of QUEUE_CONFIG) {
       const queueUrl = this.configService.getOrThrow(queue.envVar);
       const batchSize = Number(this.configService.get(queue.batchSizeEnvVar));
@@ -62,11 +62,12 @@ export class SqsService implements OnModuleInit, OnModuleDestroy {
    * 
    * @param queueUrl 
    * @param messagesToDelete 
+   * @returns number of deleted messages
    */
   async deleteProcessedMessages(
     queueUrl: string,
     messagesToDelete: MessageBodyAndReceiptHandle[],
-  ) {
+  ): Promise<number> {
     const maxChunkSize = 10;
 
     const chunkSize = Math.min(
@@ -76,35 +77,39 @@ export class SqsService implements OnModuleInit, OnModuleDestroy {
 
     const batches: DeleteMessageBatchCommand[] = [];
 
-    for (let i = 0; i < messagesToDelete.length; i += chunkSize) {
-      const chunk = messagesToDelete.slice(i, i + chunkSize);
+    try{
+      for (let i = 0; i < messagesToDelete.length; i += chunkSize) {
+        const chunk = messagesToDelete.slice(i, i + chunkSize);
+        
+        const entries = chunk.map((message, j) => ({
+          Id: (i + j).toString(),
+          ReceiptHandle: message.receiptHandle,
+        }));
 
-      const entries = chunk.map((message, j) => ({
-        Id: (i + j).toString(),
-        ReceiptHandle: message.receiptHandle,
-      }));
-
-      batches.push(
-        new DeleteMessageBatchCommand({
-          QueueUrl: queueUrl,
-          Entries: entries,
-        }),
-      );
-    }
-
-    const results = await Promise.all(
-      batches.map(async batch => this.sqs.send(batch)),
-    );
-
-    let deletedCount = 0;
-
-    for (const res of results) {
-      if (res && res.Successful) {
-        deletedCount += res.Successful.length; 
+        batches.push(
+          new DeleteMessageBatchCommand({
+            QueueUrl: queueUrl,
+            Entries: entries,
+          }),
+        );
       }
-    }
 
-    this.logger.log(`Deleted messages: ${deletedCount}`);
+      const results = await Promise.all(
+        batches.map(async batch => this.sqs.send(batch)),
+      );
+
+      let deletedCount = 0;
+
+      for (const res of results) {
+        if (res && res.Successful) {
+          deletedCount += res.Successful.length; 
+        }
+      }
+
+      return deletedCount;
+    } catch (error) {
+      throw new Error(`Error deleting messages: ${error}`);
+    }
   }
 
   /**
@@ -132,15 +137,15 @@ export class SqsService implements OnModuleInit, OnModuleDestroy {
     queueName: string,
     batchSize,
     flushTimeoutMs,
-  ) {
+  ): Promise<void> {
     this.queueLoops[queueName] = true;
     
     let batch: MessageBodyAndReceiptHandle[] = [];
     let batchStartTime: number | null = null;
     let isFlushing = false;
 
-    // TODO: type the return
-    const flushBatch = async () => {
+    // TODO: refactor this into a separate method
+    const flushBatch = async (): Promise<void> => {
       if (batch.length === 0) {
         batchStartTime = null;
 
@@ -159,7 +164,12 @@ export class SqsService implements OnModuleInit, OnModuleDestroy {
       try {
         const hanlderResponse = await handler.handleMessages(currentBatch);
 
-        this.deleteProcessedMessages(queueUrl, hanlderResponse);
+        this.logger.log(`[${queueName}] handler processed ${hanlderResponse.length} messages of ${currentBatch.length}`);
+        if (hanlderResponse.length > 0) {
+          const deletedCount = await this.deleteProcessedMessages(queueUrl, hanlderResponse);
+
+          this.logger.log(`Deleted messages: ${deletedCount}`);
+        }
       } catch (error) {
         this.logger.error(`[${queueName}] handler error during flush`, error);
       } finally {
@@ -219,8 +229,12 @@ export class SqsService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  onModuleDestroy() {
-    throw new Error('Method not implemented.');
-  }
+  onModuleDestroy(): void {
+    this.logger.log('Stopping queue loops...');
 
+    // TODO: implement graceful shutdown with in-flight message processing completion
+    for (const queueName of Object.keys(this.queueLoops)) {
+      this.queueLoops[queueName] = false;
+    }
+  }
 }
