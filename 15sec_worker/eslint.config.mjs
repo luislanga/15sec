@@ -159,23 +159,15 @@ export default tseslint.config(
           format: ['camelCase', 'UPPER_CASE', 'PascalCase'],
         },
       ],
-      'unicorn/prevent-abbreviations': [
-        'error',
-        {
-          'allowList': {
-            'args': true,
-            'env': true,
-            'util': true,
-          },
-        },
-      ],
       'unicorn/no-array-callback-reference': ['off'],
       'unicorn/no-null': ['off'],
       'unicorn/no-process-exit': ['off'],
       'unicorn/numeric-separators-style': ['off'],
       'unicorn/prefer-module': ['off'],
       'unicorn/prefer-top-level-await': ['off'],
-      'unicorn/import-style': ['off'],      
+      'unicorn/import-style': ['off'],
+      'unicorn/no-await-expression-member': ['off'],
+      'unicorn/prevent-abbreviations': 'off',
       '@typescript-eslint/array-type': ['error', { default: 'array-simple' }],
       '@typescript-eslint/member-ordering': [ 'off' ],    
       '@typescript-eslint/await-thenable': 'error',
@@ -220,7 +212,7 @@ export default tseslint.config(
       },
       'import/resolver': {
         typescript: {
-          project: 'tsconfig.json',
+          project: './tsconfig.json',
         },
       },
     },

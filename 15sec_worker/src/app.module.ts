@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 
 import { HealthCheckModule } from './health-check/health-check.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { SqsModule } from './sqs/sqs.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { PrismaModule } from './prisma/prisma.module';
     }),
     HealthCheckModule,
     PrismaModule,
+    SqsModule,
   ],
   controllers: [],
   providers: [],
