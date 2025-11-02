@@ -5,6 +5,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { CronModule } from './cron/cron.module';
 import { HealthCheckModule } from './health-check/health-check.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { RedlockModule } from './providers/redlock.module';
 import { SqsModule } from './sqs/sqs.module';
 
 @Module({
@@ -16,6 +17,7 @@ import { SqsModule } from './sqs/sqs.module';
     CronModule,
     HealthCheckModule,
     PrismaModule,
+    RedlockModule,
     ScheduleModule.forRoot(),
     SqsModule,
   ],

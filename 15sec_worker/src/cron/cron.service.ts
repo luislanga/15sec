@@ -1,14 +1,31 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import Redlock from 'redlock';
 
 import { PostService } from '@/post/post.service';
 
 @Injectable()
 export class CronService {
-  constructor(private readonly postService: PostService) {}
+  private readonly logger = new Logger();
 
-  @Cron(CronExpression.EVERY_12_HOURS)
-  deleteFailedToUploadPosts() {
-    this.postService.deleteFailedToUploadPosts();
+  constructor(
+    @Inject('REDLOCK')
+    private readonly redlock: Redlock,
+    private readonly postService: PostService,
+  ) {}
+
+  @Cron(CronExpression.EVERY_10_SECONDS)
+  async deleteFailedToUploadPosts() {
+    this.logger.log('Running Delete Failed to Upload Posts cron job');
+    try {
+      await this.redlock.acquire(['locks:deleteFailedPosts'], 1000 * 60 * 5);
+      await this.postService.deleteFailedToUploadPosts();
+    } catch (error) {
+      if (error instanceof Error && error.name === 'LockError') {
+        this.logger.log('Skipping failed to upload post deletions');
+      } else {
+        throw error;
+      }
+    }
   }
 }
