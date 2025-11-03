@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
     "database:up": "docker compose -f docker-compose-db.yml up -d",
+    "redis:up": "docker compose -f docker-compose-redis.yml up -d",
     "prisma:generate-and-migrate": "npx prisma generate && npx prisma migrate dev",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
