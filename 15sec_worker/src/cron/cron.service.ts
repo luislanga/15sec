@@ -14,11 +14,11 @@ export class CronService {
     private readonly postService: PostService,
   ) {}
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_12_HOURS)
   async deleteFailedToUploadPosts() {
     this.logger.log('Running Delete Failed to Upload Posts cron job');
     try {
-      await this.redlock.acquire(['locks:deleteFailedPosts'], 1000 * 60 * 5);
+      await this.redlock.acquire(['locks:deleteFailedPosts'], 1000 * 60 * 10);
       await this.postService.deleteFailedToUploadPosts();
     } catch (error) {
       if (error instanceof Error && error.name === 'LockError') {

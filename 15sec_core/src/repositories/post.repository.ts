@@ -30,8 +30,8 @@ export class PostRepository {
         where: {
           videoUploadStatus: videoUploadStatus.PENDING,
           createdAt: {
-            gte: new Date(Date.now() - newerThanInMs), // At least 24 hours old
-            lt: new Date(Date.now() - olderThanInMs),  // Less than 48 hours old
+            gte: new Date(Date.now() - olderThanInMs),
+            lt: new Date(Date.now() - newerThanInMs),
           },
         },
         take: batchSize,
