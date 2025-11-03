@@ -8,10 +8,11 @@ env:
 
 phases:
   pre_build:
-    commands:
-      - echo Logging in to Amazon ECR...
-      - ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+  commands:
+    - echo Logging in to Amazon ECR...
+    - aws ecr get-login-password --region $AWS_REGION \
+      | docker login --username AWS --password-stdin \
+      $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
   build:
     commands:
       - echo Building Docker image for $SERVICE_NAME...
