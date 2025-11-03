@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  worker:
+    build:
+      context: .
+      dockerfile: 15sec_worker/Dockerfile
+    env_file:
+      - 15sec_worker/.env.container
+    networks:
+      - db-net
+      - redis-net
+
+networks:
+  db-net:
+    external: true
+    name: 15sec_core_backend
+
+  redis-net:
+    external: true
+    name: 15sec_core_default
