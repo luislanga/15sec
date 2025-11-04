@@ -27,7 +27,7 @@ phases:
 
   build:
     commands:
-      - docker build -t $IMAGE_REPO_NAME .
+      - docker build -t 15sec_post/$IMAGE_REPO_NAME .
       - docker tag $IMAGE_REPO_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest
 
   post_build:
