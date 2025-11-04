@@ -14,8 +14,8 @@ COPY 15sec_core 15sec_core
 COPY 15sec_post 15sec_post
 
 # Build core and prisma generate
-RUN cd 15sec_core && npm run build
 RUN cd 15sec_core && npx prisma generate
+RUN cd 15sec_core && npm run build
 
 # Copy core build output into post
 RUN cp -r 15sec_core/dist 15sec_post/node_modules/15sec_core
