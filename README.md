@@ -19,7 +19,7 @@
 ## What have I accomplished so far (I hope I remember to update this):
 - System design overview
 - Basic monorepo architecture with a common (core) project for the post microservice
-- A basic post API working with queues and pre-signed URLs and its worker
+- A basic post API and worker with queues using batching and pre-signed URLs
 - Working Dockerfiles for the worker and post API
 
 ## Next:
