@@ -16,7 +16,7 @@
 - QDrant (for semantic search which is more of a gimmick than an actual usable feature -> my plan is to pre-embed and cache most AI related stuff so I don't have to run a model in my demo)
 - Some embedding model on Ollama
 
-## What have I accomplished so far (I hope I remember to update this):
+## What I have accomplished so far (I hope I remember to update this):
 - System design overview
 - Basic monorepo architecture with a common (core) project for the post microservice
 - A basic post API and worker with queues using batching and pre-signed URLs
